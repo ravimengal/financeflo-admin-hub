@@ -1,4 +1,4 @@
-import { AdminSidebar } from "./AdminSidebar";
+import { Navbar } from "./Navbar";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -6,10 +6,10 @@ interface AdminLayoutProps {
 
 export function AdminLayout({ children }: AdminLayoutProps) {
   return (
-    <div className="flex min-h-screen w-full">
-      <AdminSidebar />
-      <main className="flex-1 overflow-auto">
-        <div className="p-6 lg:p-8">{children}</div>
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {children}
       </main>
     </div>
   );

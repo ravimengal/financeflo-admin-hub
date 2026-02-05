@@ -2,59 +2,52 @@
 @tailwind components;
 @tailwind utilities;
 
-/* FinanceFlo-inspired Design System - Dark Navy with Orange Accents */
-
 @layer base {
   :root {
-    /* Dark navy theme - inspired by FinanceFlo */
-    --background: 220 30% 6%;
-    --foreground: 210 40% 98%;
+    /* Light theme with dark navy header */
+    --background: 0 0% 98%;
+    --foreground: 222 47% 11%;
 
-    --card: 220 25% 10%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
 
-    --popover: 220 25% 12%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
 
-    /* Orange primary - FinanceFlo signature color */
+    /* Orange primary */
     --primary: 25 95% 53%;
-    --primary-foreground: 220 30% 6%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 20% 16%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 220 20% 14%;
-    --muted-foreground: 215 20% 55%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 220 20% 18%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 11%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 220 20% 18%;
-    --input: 220 20% 16%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
     --ring: 25 95% 53%;
 
     --radius: 0.75rem;
 
-    /* Sidebar - darker variant */
-    --sidebar-background: 220 35% 5%;
-    --sidebar-foreground: 215 20% 65%;
-    --sidebar-primary: 25 95% 53%;
-    --sidebar-primary-foreground: 220 30% 6%;
-    --sidebar-accent: 220 25% 12%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 220 20% 15%;
-    --sidebar-ring: 25 95% 53%;
+    /* Navbar - dark navy like FinanceFlo */
+    --navbar-background: 222 47% 11%;
+    --navbar-foreground: 210 40% 98%;
+    --navbar-muted: 215 20% 65%;
 
     /* Custom tokens */
     --success: 142 76% 36%;
-    --success-foreground: 210 40% 98%;
+    --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
-    --warning-foreground: 220 30% 6%;
+    --warning-foreground: 0 0% 100%;
     --info: 199 89% 48%;
-    --info-foreground: 220 30% 6%;
+    --info-foreground: 0 0% 100%;
   }
 }
 
@@ -70,8 +63,8 @@
 }
 
 @layer utilities {
-  .glass-card {
-    @apply bg-card/80 backdrop-blur-xl border border-border/50;
+  .content-card {
+    @apply bg-card border border-border rounded-lg shadow-sm;
   }
 
   .text-gradient {

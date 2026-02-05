@@ -56,7 +56,7 @@ export default function Organization() {
         </div>
 
         {/* Logo Section */}
-        <div className="glass-card rounded-xl p-6 mb-6">
+        <div className="content-card p-6 mb-6">
           <h2 className="text-lg font-semibold text-foreground mb-4">
             Organization Logo
           </h2>
@@ -104,7 +104,7 @@ export default function Organization() {
         </div>
 
         {/* Organization Details */}
-        <div className="glass-card rounded-xl p-6 mb-6">
+        <div className="content-card p-6 mb-6">
           <h2 className="text-lg font-semibold text-foreground mb-4">
             Organization Details
           </h2>
