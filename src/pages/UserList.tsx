@@ -170,7 +170,7 @@ export default function UserList() {
         </div>
 
         {/* User Table */}
-        <div className="glass-card rounded-xl overflow-hidden">
+        <div className="content-card overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow className="border-border hover:bg-transparent">

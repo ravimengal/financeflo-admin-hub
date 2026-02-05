@@ -17,7 +17,7 @@ export function StatCard({ title, value, subtitle, icon: Icon, trend, className 
   return (
     <div
       className={cn(
-        "glass-card rounded-xl p-5 hover-lift",
+        "content-card p-5 hover-lift",
         className
       )}
     >

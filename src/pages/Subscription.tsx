@@ -101,7 +101,7 @@ export default function Subscription() {
         </div>
 
         {/* Usage Section */}
-        <div className="glass-card rounded-xl p-6 mb-8">
+        <div className="content-card p-6 mb-8">
           <h2 className="text-lg font-semibold text-foreground mb-6">
             Usage This Month
           </h2>
@@ -154,7 +154,7 @@ export default function Subscription() {
             <div
               key={plan.name}
               className={cn(
-                "glass-card rounded-xl p-6 relative hover-lift",
+                "content-card p-6 relative hover-lift",
                 plan.current && "ring-2 ring-primary glow-primary",
                 plan.popular && "border-primary/50"
               )}

@@ -159,7 +159,7 @@ export default function AppList() {
           {filteredApps.map((app, index) => (
             <div
               key={app.id}
-              className="glass-card rounded-xl p-5 hover-lift group"
+              className="content-card p-5 hover-lift group"
               style={{ animationDelay: `${index * 50}ms` }}
             >
               <div className="flex items-start justify-between mb-4">
