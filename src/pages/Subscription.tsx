@@ -1,68 +1,80 @@
-import { CreditCard, Check, Zap, Crown, Rocket } from "lucide-react";
+import { useMemo } from "react";
+import { CreditCard, Check, Zap, Crown, Rocket, AlertCircle, Loader2 } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { useCurrentSubscription, usePlans, useUpgradePlan } from "@/hooks/useSubscription";
+import { useToast } from "@/hooks/use-toast";
 
-const plans = [
-  {
-    name: "Starter",
-    price: "$29",
-    period: "/month",
-    description: "Perfect for small teams getting started",
-    icon: Zap,
-    features: [
-      "Up to 5 team members",
-      "10 GB storage",
-      "Basic analytics",
-      "Email support",
-    ],
-    current: false,
-  },
-  {
-    name: "Professional",
-    price: "$79",
-    period: "/month",
-    description: "For growing teams that need more power",
-    icon: Crown,
-    features: [
-      "Up to 25 team members",
-      "100 GB storage",
-      "Advanced analytics",
-      "Priority support",
-      "API access",
-      "Custom integrations",
-    ],
-    current: true,
-    popular: true,
-  },
-  {
-    name: "Enterprise",
-    price: "$199",
-    period: "/month",
-    description: "For large organizations with complex needs",
-    icon: Rocket,
-    features: [
-      "Unlimited team members",
-      "Unlimited storage",
-      "Custom analytics",
-      "24/7 dedicated support",
-      "Full API access",
-      "Custom development",
-      "SLA guarantee",
-    ],
-    current: false,
-  },
-];
-
-const usageData = {
-  storage: { used: 45, total: 100, unit: "GB" },
-  users: { used: 18, total: 25 },
-  apiCalls: { used: 45000, total: 100000 },
+const planIcons: Record<string, typeof Zap> = {
+  starter: Zap,
+  professional: Crown,
+  enterprise: Rocket,
 };
 
+function PlanCardSkeleton() {
+  return (
+    <div className="content-card p-6">
+      <div className="flex items-center gap-3 mb-4">
+        <Skeleton className="w-9 h-9 rounded-lg" />
+        <Skeleton className="h-6 w-32" />
+      </div>
+      <div className="mb-4">
+        <Skeleton className="h-10 w-24 mb-1" />
+      </div>
+      <Skeleton className="h-4 w-full mb-6" />
+      <div className="space-y-3 mb-6">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <Skeleton className="w-4 h-4 rounded-full" />
+            <Skeleton className="h-4 w-3/4" />
+          </div>
+        ))}
+      </div>
+      <Skeleton className="h-10 w-full" />
+    </div>
+  );
+}
+
 export default function Subscription() {
+  const { toast } = useToast();
+  
+  const { data: subscription, isLoading: subLoading, isError: subError } = useCurrentSubscription();
+  const { data: plans = [], isLoading: plansLoading } = usePlans();
+  const upgradeMutation = useUpgradePlan();
+
+  const currentPlan = useMemo(() => 
+    plans.find(p => p.id === subscription?.planId),
+    [plans, subscription]
+  );
+
+  const usageData = subscription?.usage || {
+    storage: { used: 0, total: 100 },
+    users: { used: 0, total: 10 },
+    apiCalls: { used: 0, total: 10000 },
+  };
+
+  const handleUpgrade = async (planId: string, planName: string) => {
+    try {
+      await upgradeMutation.mutateAsync(planId);
+      toast({
+        title: "Plan upgraded",
+        description: `Successfully upgraded to ${planName} plan.`,
+      });
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to upgrade plan. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const isLoading = subLoading || plansLoading;
+
   return (
     <AdminLayout>
       <div className="animate-fade-in">
@@ -74,29 +86,47 @@ export default function Subscription() {
           </p>
         </div>
 
+        {/* Error State */}
+        {subError && (
+          <div className="content-card p-6 mb-8 border-destructive/50">
+            <div className="flex items-center gap-3 text-destructive">
+              <AlertCircle className="w-5 h-5" />
+              <div>
+                <p className="font-medium">Failed to load subscription</p>
+                <p className="text-sm text-muted-foreground">
+                  Please try refreshing the page
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Current Plan Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <StatCard
             title="Current Plan"
-            value="Professional"
+            value={isLoading ? "-" : currentPlan?.name || "Free"}
             icon={Crown}
-            subtitle="Renews Feb 15, 2026"
+            subtitle={subscription?.currentPeriodEnd 
+              ? `Renews ${new Date(subscription.currentPeriodEnd).toLocaleDateString()}`
+              : undefined
+            }
           />
           <StatCard
             title="Monthly Cost"
-            value="$79"
+            value={isLoading ? "-" : currentPlan ? `$${currentPlan.price}` : "$0"}
             icon={CreditCard}
           />
           <StatCard
             title="Team Members"
-            value={`${usageData.users.used}/${usageData.users.total}`}
+            value={isLoading ? "-" : `${usageData.users.used}/${usageData.users.total}`}
             icon={CreditCard}
           />
           <StatCard
-            title="Days Remaining"
-            value="10"
+            title="Status"
+            value={isLoading ? "-" : subscription?.status || "Active"}
             icon={CreditCard}
-            subtitle="Next billing cycle"
+            subtitle={subscription?.status === "active" ? "Next billing cycle" : undefined}
           />
         </div>
 
@@ -105,102 +135,131 @@ export default function Subscription() {
           <h2 className="text-lg font-semibold text-foreground mb-6">
             Usage This Month
           </h2>
-          <div className="space-y-6">
-            <div>
-              <div className="flex justify-between mb-2">
-                <span className="text-sm text-muted-foreground">Storage</span>
-                <span className="text-sm font-medium text-foreground">
-                  {usageData.storage.used} / {usageData.storage.total} {usageData.storage.unit}
-                </span>
-              </div>
-              <Progress
-                value={(usageData.storage.used / usageData.storage.total) * 100}
-                className="h-2"
-              />
+          {isLoading ? (
+            <div className="space-y-6">
+              {[...Array(3)].map((_, i) => (
+                <div key={i}>
+                  <div className="flex justify-between mb-2">
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                  <Skeleton className="h-2 w-full" />
+                </div>
+              ))}
             </div>
-            <div>
-              <div className="flex justify-between mb-2">
-                <span className="text-sm text-muted-foreground">Team Members</span>
-                <span className="text-sm font-medium text-foreground">
-                  {usageData.users.used} / {usageData.users.total}
-                </span>
+          ) : (
+            <div className="space-y-6">
+              <div>
+                <div className="flex justify-between mb-2">
+                  <span className="text-sm text-muted-foreground">Storage</span>
+                  <span className="text-sm font-medium text-foreground">
+                    {usageData.storage.used} / {usageData.storage.total} GB
+                  </span>
+                </div>
+                <Progress
+                  value={(usageData.storage.used / usageData.storage.total) * 100}
+                  className="h-2"
+                />
               </div>
-              <Progress
-                value={(usageData.users.used / usageData.users.total) * 100}
-                className="h-2"
-              />
-            </div>
-            <div>
-              <div className="flex justify-between mb-2">
-                <span className="text-sm text-muted-foreground">API Calls</span>
-                <span className="text-sm font-medium text-foreground">
-                  {usageData.apiCalls.used.toLocaleString()} / {usageData.apiCalls.total.toLocaleString()}
-                </span>
+              <div>
+                <div className="flex justify-between mb-2">
+                  <span className="text-sm text-muted-foreground">Team Members</span>
+                  <span className="text-sm font-medium text-foreground">
+                    {usageData.users.used} / {usageData.users.total}
+                  </span>
+                </div>
+                <Progress
+                  value={(usageData.users.used / usageData.users.total) * 100}
+                  className="h-2"
+                />
               </div>
-              <Progress
-                value={(usageData.apiCalls.used / usageData.apiCalls.total) * 100}
-                className="h-2"
-              />
+              <div>
+                <div className="flex justify-between mb-2">
+                  <span className="text-sm text-muted-foreground">API Calls</span>
+                  <span className="text-sm font-medium text-foreground">
+                    {usageData.apiCalls.used.toLocaleString()} / {usageData.apiCalls.total.toLocaleString()}
+                  </span>
+                </div>
+                <Progress
+                  value={(usageData.apiCalls.used / usageData.apiCalls.total) * 100}
+                  className="h-2"
+                />
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Plans */}
         <h2 className="text-lg font-semibold text-foreground mb-4">
           Available Plans
         </h2>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {plans.map((plan) => (
-            <div
-              key={plan.name}
-              className={cn(
-                "content-card p-6 relative hover-lift",
-                plan.current && "ring-2 ring-primary glow-primary",
-                plan.popular && "border-primary/50"
-              )}
-            >
-              {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full">
-                    Most Popular
-                  </span>
+        
+        {plansLoading ? (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, i) => (
+              <PlanCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : plans.length === 0 ? (
+          <div className="content-card p-12 text-center">
+            <CreditCard className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">No plans available</h3>
+            <p className="text-muted-foreground">
+              Please check back later for available subscription plans.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {plans.map((plan) => {
+              const isCurrent = subscription?.planId === plan.id;
+              const Icon = planIcons[plan.name.toLowerCase()] || Zap;
+              
+              return (
+                <div
+                  key={plan.id}
+                  className={cn(
+                    "content-card p-6 relative hover-lift",
+                    isCurrent && "ring-2 ring-primary glow-primary"
+                  )}
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 rounded-lg bg-primary/10">
+                      <Icon className="w-5 h-5 text-primary" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-foreground">{plan.name}</h3>
+                  </div>
+                  <div className="mb-4">
+                    <span className="text-4xl font-bold text-foreground">${plan.price}</span>
+                    <span className="text-muted-foreground">/{plan.period === 'monthly' ? 'mo' : 'yr'}</span>
+                  </div>
+                  <ul className="space-y-3 mb-6">
+                    {plan.features.map((feature) => (
+                      <li key={feature} className="flex items-center gap-2 text-sm">
+                        <Check className="w-4 h-4 text-success flex-shrink-0" />
+                        <span className="text-muted-foreground">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    className={cn(
+                      "w-full",
+                      isCurrent
+                        ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                        : "bg-primary text-primary-foreground hover:bg-primary/90"
+                    )}
+                    disabled={isCurrent || upgradeMutation.isPending}
+                    onClick={() => handleUpgrade(plan.id, plan.name)}
+                  >
+                    {upgradeMutation.isPending ? (
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    ) : null}
+                    {isCurrent ? "Current Plan" : "Upgrade"}
+                  </Button>
                 </div>
-              )}
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <plan.icon className="w-5 h-5 text-primary" />
-                </div>
-                <h3 className="text-xl font-semibold text-foreground">{plan.name}</h3>
-              </div>
-              <div className="mb-4">
-                <span className="text-4xl font-bold text-foreground">{plan.price}</span>
-                <span className="text-muted-foreground">{plan.period}</span>
-              </div>
-              <p className="text-sm text-muted-foreground mb-6">
-                {plan.description}
-              </p>
-              <ul className="space-y-3 mb-6">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-center gap-2 text-sm">
-                    <Check className="w-4 h-4 text-success flex-shrink-0" />
-                    <span className="text-muted-foreground">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              <Button
-                className={cn(
-                  "w-full",
-                  plan.current
-                    ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                    : "bg-primary text-primary-foreground hover:bg-primary/90"
-                )}
-                disabled={plan.current}
-              >
-                {plan.current ? "Current Plan" : "Upgrade"}
-              </Button>
-            </div>
-          ))}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </AdminLayout>
   );
