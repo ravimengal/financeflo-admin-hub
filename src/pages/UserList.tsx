@@ -1,11 +1,12 @@
-import { useState } from "react";
-import { Users, Search, Plus, MoreVertical, Mail, Shield, Trash2, UserCheck } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Users, Search, Plus, MoreVertical, Mail, Shield, Trash2, UserCheck, AlertCircle } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { StatCard } from "@/components/ui/stat-card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -21,74 +22,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: "admin" | "editor" | "viewer";
-  status: "active" | "inactive" | "pending";
-  avatar?: string;
-  lastActive: string;
-  joinedAt: string;
-}
-
-const mockUsers: User[] = [
-  {
-    id: "1",
-    name: "Sarah Johnson",
-    email: "sarah.johnson@company.com",
-    role: "admin",
-    status: "active",
-    lastActive: "2 minutes ago",
-    joinedAt: "2023-08-15",
-  },
-  {
-    id: "2",
-    name: "Michael Chen",
-    email: "michael.chen@company.com",
-    role: "editor",
-    status: "active",
-    lastActive: "1 hour ago",
-    joinedAt: "2023-10-22",
-  },
-  {
-    id: "3",
-    name: "Emily Davis",
-    email: "emily.davis@company.com",
-    role: "viewer",
-    status: "pending",
-    lastActive: "Never",
-    joinedAt: "2024-01-05",
-  },
-  {
-    id: "4",
-    name: "James Wilson",
-    email: "james.wilson@company.com",
-    role: "editor",
-    status: "active",
-    lastActive: "3 hours ago",
-    joinedAt: "2023-09-18",
-  },
-  {
-    id: "5",
-    name: "Lisa Anderson",
-    email: "lisa.anderson@company.com",
-    role: "admin",
-    status: "active",
-    lastActive: "Just now",
-    joinedAt: "2023-06-10",
-  },
-  {
-    id: "6",
-    name: "Robert Brown",
-    email: "robert.brown@company.com",
-    role: "viewer",
-    status: "inactive",
-    lastActive: "2 weeks ago",
-    joinedAt: "2023-12-01",
-  },
-];
+import { useUsers, useDeleteUser } from "@/hooks/useUsers";
+import { useToast } from "@/hooks/use-toast";
 
 const roleColors = {
   admin: "bg-primary/20 text-primary border-primary/30",
@@ -102,18 +37,61 @@ const statusColors = {
   pending: "bg-warning/20 text-warning border-warning/30",
 };
 
+function UserRowSkeleton() {
+  return (
+    <TableRow className="border-border">
+      <TableCell>
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-9 w-9 rounded-full" />
+          <div>
+            <Skeleton className="h-4 w-32 mb-1" />
+            <Skeleton className="h-3 w-48" />
+          </div>
+        </div>
+      </TableCell>
+      <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+      <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+      <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+      <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+      <TableCell><Skeleton className="h-8 w-8 rounded" /></TableCell>
+    </TableRow>
+  );
+}
+
 export default function UserList() {
   const [search, setSearch] = useState("");
-  const [users] = useState<User[]>(mockUsers);
+  const { toast } = useToast();
+  
+  const { data: users = [], isLoading, isError, error } = useUsers();
+  const deleteUserMutation = useDeleteUser();
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name.toLowerCase().includes(search.toLowerCase()) ||
-      user.email.toLowerCase().includes(search.toLowerCase())
+  const filteredUsers = useMemo(() =>
+    users.filter(
+      (user) =>
+        user.name.toLowerCase().includes(search.toLowerCase()) ||
+        user.email.toLowerCase().includes(search.toLowerCase())
+    ), [users, search]
   );
 
-  const activeUsers = users.filter((u) => u.status === "active").length;
-  const adminCount = users.filter((u) => u.role === "admin").length;
+  const activeUsers = useMemo(() => users.filter((u) => u.status === "active").length, [users]);
+  const adminCount = useMemo(() => users.filter((u) => u.role === "admin").length, [users]);
+  const pendingCount = useMemo(() => users.filter((u) => u.status === "pending").length, [users]);
+
+  const handleDelete = async (userId: string, userName: string) => {
+    try {
+      await deleteUserMutation.mutateAsync(userId);
+      toast({
+        title: "User removed",
+        description: `${userName} has been removed successfully.`,
+      });
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to remove the user. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <AdminLayout>
@@ -136,24 +114,24 @@ export default function UserList() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <StatCard
             title="Total Users"
-            value={users.length}
+            value={isLoading ? "-" : users.length}
             icon={Users}
             trend={{ value: 15, positive: true }}
           />
           <StatCard
             title="Active Users"
-            value={activeUsers}
+            value={isLoading ? "-" : activeUsers}
             icon={UserCheck}
-            subtitle={`${Math.round((activeUsers / users.length) * 100)}% of total`}
+            subtitle={users.length > 0 ? `${Math.round((activeUsers / users.length) * 100)}% of total` : undefined}
           />
           <StatCard
             title="Admins"
-            value={adminCount}
+            value={isLoading ? "-" : adminCount}
             icon={Shield}
           />
           <StatCard
             title="Pending Invites"
-            value={users.filter((u) => u.status === "pending").length}
+            value={isLoading ? "-" : pendingCount}
             icon={Mail}
           />
         </div>
@@ -169,83 +147,128 @@ export default function UserList() {
           />
         </div>
 
+        {/* Error State */}
+        {isError && (
+          <div className="content-card p-6 mb-6 border-destructive/50">
+            <div className="flex items-center gap-3 text-destructive">
+              <AlertCircle className="w-5 h-5" />
+              <div>
+                <p className="font-medium">Failed to load users</p>
+                <p className="text-sm text-muted-foreground">
+                  {error instanceof Error ? error.message : "An error occurred"}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!isLoading && !isError && filteredUsers.length === 0 && (
+          <div className="content-card p-12 text-center">
+            <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">
+              {search ? "No users found" : "No users yet"}
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              {search 
+                ? "Try adjusting your search terms" 
+                : "Get started by inviting your first team member"}
+            </p>
+            {!search && (
+              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
+                <Plus className="w-4 h-4" />
+                Invite User
+              </Button>
+            )}
+          </div>
+        )}
+
         {/* User Table */}
-        <div className="content-card overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-border hover:bg-transparent">
-                <TableHead className="text-muted-foreground">User</TableHead>
-                <TableHead className="text-muted-foreground">Role</TableHead>
-                <TableHead className="text-muted-foreground">Status</TableHead>
-                <TableHead className="text-muted-foreground">Last Active</TableHead>
-                <TableHead className="text-muted-foreground">Joined</TableHead>
-                <TableHead className="text-muted-foreground w-12"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredUsers.map((user) => (
-                <TableRow key={user.id} className="border-border hover:bg-accent/50">
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-9 w-9">
-                        <AvatarImage src={user.avatar} />
-                        <AvatarFallback className="bg-primary/20 text-primary text-sm">
-                          {user.name.split(" ").map((n) => n[0]).join("")}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium text-foreground">{user.name}</p>
-                        <p className="text-sm text-muted-foreground">{user.email}</p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={cn("capitalize", roleColors[user.role])}
-                    >
-                      {user.role}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={cn("capitalize", statusColors[user.status])}
-                    >
-                      {user.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {user.lastActive}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {new Date(user.joinedAt).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="p-2 rounded-lg hover:bg-accent">
-                          <MoreVertical className="w-4 h-4 text-muted-foreground" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="bg-popover border-border">
-                        <DropdownMenuItem className="gap-2 cursor-pointer">
-                          <Shield className="w-4 h-4" /> Change Role
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="gap-2 cursor-pointer">
-                          <Mail className="w-4 h-4" /> Send Email
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="gap-2 cursor-pointer text-destructive">
-                          <Trash2 className="w-4 h-4" /> Remove
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+        {(isLoading || filteredUsers.length > 0) && !isError && (
+          <div className="content-card overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-border hover:bg-transparent">
+                  <TableHead className="text-muted-foreground">User</TableHead>
+                  <TableHead className="text-muted-foreground">Role</TableHead>
+                  <TableHead className="text-muted-foreground">Status</TableHead>
+                  <TableHead className="text-muted-foreground">Last Active</TableHead>
+                  <TableHead className="text-muted-foreground">Joined</TableHead>
+                  <TableHead className="text-muted-foreground w-12"></TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  [...Array(5)].map((_, i) => <UserRowSkeleton key={i} />)
+                ) : (
+                  filteredUsers.map((user) => (
+                    <TableRow key={user.id} className="border-border hover:bg-accent/50">
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-9 w-9">
+                            <AvatarImage src={user.avatar} />
+                            <AvatarFallback className="bg-primary/20 text-primary text-sm">
+                              {user.name.split(" ").map((n) => n[0]).join("")}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium text-foreground">{user.name}</p>
+                            <p className="text-sm text-muted-foreground">{user.email}</p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={cn("capitalize", roleColors[user.role])}
+                        >
+                          {user.role}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={cn("capitalize", statusColors[user.status])}
+                        >
+                          {user.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {user.lastActive || "Never"}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {user.joinedAt ? new Date(user.joinedAt).toLocaleDateString() : "-"}
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="p-2 rounded-lg hover:bg-accent">
+                              <MoreVertical className="w-4 h-4 text-muted-foreground" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="bg-popover border-border">
+                            <DropdownMenuItem className="gap-2 cursor-pointer">
+                              <Shield className="w-4 h-4" /> Change Role
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="gap-2 cursor-pointer">
+                              <Mail className="w-4 h-4" /> Send Email
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="gap-2 cursor-pointer text-destructive"
+                              onClick={() => handleDelete(user.id, user.name)}
+                            >
+                              <Trash2 className="w-4 h-4" /> Remove
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </div>
     </AdminLayout>
   );

@@ -1,30 +1,56 @@
-import { useState, useRef } from "react";
-import { Building2, Upload, Save, Camera } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Building2, Upload, Save, Camera, AlertCircle, Loader2 } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { useMyOrganizations, useUpdateOrganization, useUploadOrgLogo } from "@/hooks/useOrganization";
 
 export default function Organization() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
+  const { data: organizations = [], isLoading, isError, error } = useMyOrganizations();
+  const updateOrgMutation = useUpdateOrganization();
+  const uploadLogoMutation = useUploadOrgLogo();
+  
+  // Use first organization from list
+  const organization = organizations[0];
+  
   const [orgData, setOrgData] = useState({
-    name: "Acme Corporation",
-    description: "Leading provider of innovative solutions for enterprise businesses.",
-    website: "https://acme.com",
-    email: "contact@acme.com",
-    phone: "+1 (555) 123-4567",
+    name: "",
+    description: "",
+    website: "",
+    email: "",
+    phone: "",
   });
   
   const [logo, setLogo] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+
+  // Sync form with fetched data
+  useEffect(() => {
+    if (organization) {
+      setOrgData({
+        name: organization.name || "",
+        description: organization.description || "",
+        website: organization.website || "",
+        email: organization.email || "",
+        phone: organization.phone || "",
+      });
+      if (organization.logo) {
+        setLogo(organization.logo);
+      }
+    }
+  }, [organization]);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setLogoFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setLogo(reader.result as string);
@@ -34,15 +60,120 @@ export default function Organization() {
   };
 
   const handleSave = async () => {
-    setIsLoading(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsLoading(false);
-    toast({
-      title: "Organization updated",
-      description: "Your changes have been saved successfully.",
-    });
+    if (!organization) return;
+    
+    try {
+      // Upload logo if changed
+      if (logoFile) {
+        await uploadLogoMutation.mutateAsync({ 
+          orgId: organization.id, 
+          file: logoFile 
+        });
+      }
+      
+      // Update organization details
+      await updateOrgMutation.mutateAsync({
+        orgId: organization.id,
+        data: orgData,
+      });
+      
+      setLogoFile(null);
+      toast({
+        title: "Organization updated",
+        description: "Your changes have been saved successfully.",
+      });
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to update organization. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
+
+  const isSaving = updateOrgMutation.isPending || uploadLogoMutation.isPending;
+
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <div className="animate-fade-in max-w-3xl">
+          <div className="mb-8">
+            <Skeleton className="h-9 w-48 mb-2" />
+            <Skeleton className="h-5 w-72" />
+          </div>
+          <div className="content-card p-6 mb-6">
+            <Skeleton className="h-6 w-40 mb-4" />
+            <div className="flex items-center gap-6">
+              <Skeleton className="w-24 h-24 rounded-xl" />
+              <div>
+                <Skeleton className="h-10 w-32 mb-2" />
+                <Skeleton className="h-4 w-48" />
+              </div>
+            </div>
+          </div>
+          <div className="content-card p-6 mb-6">
+            <Skeleton className="h-6 w-48 mb-4" />
+            <div className="space-y-4">
+              {[...Array(4)].map((_, i) => (
+                <div key={i}>
+                  <Skeleton className="h-4 w-32 mb-1.5" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (isError) {
+    return (
+      <AdminLayout>
+        <div className="animate-fade-in max-w-3xl">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-foreground">Organization</h1>
+            <p className="text-muted-foreground mt-1">
+              Manage your organization's profile and settings
+            </p>
+          </div>
+          <div className="content-card p-6 border-destructive/50">
+            <div className="flex items-center gap-3 text-destructive">
+              <AlertCircle className="w-5 h-5" />
+              <div>
+                <p className="font-medium">Failed to load organization</p>
+                <p className="text-sm text-muted-foreground">
+                  {error instanceof Error ? error.message : "An error occurred"}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (!organization) {
+    return (
+      <AdminLayout>
+        <div className="animate-fade-in max-w-3xl">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-foreground">Organization</h1>
+            <p className="text-muted-foreground mt-1">
+              Manage your organization's profile and settings
+            </p>
+          </div>
+          <div className="content-card p-12 text-center">
+            <Building2 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">No organization found</h3>
+            <p className="text-muted-foreground">
+              You don't have access to any organizations yet.
+            </p>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -182,11 +313,15 @@ export default function Organization() {
         <div className="flex justify-end">
           <Button
             onClick={handleSave}
-            disabled={isLoading}
+            disabled={isSaving}
             className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
           >
-            <Save className="w-4 h-4" />
-            {isLoading ? "Saving..." : "Save Changes"}
+            {isSaving ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Save className="w-4 h-4" />
+            )}
+            {isSaving ? "Saving..." : "Save Changes"}
           </Button>
         </div>
       </div>
