@@ -24,6 +24,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useUsers, useDeleteUser } from "@/hooks/useUsers";
 import { useToast } from "@/hooks/use-toast";
+import { CreateUserDialog } from "@/components/dialogs/CreateUserDialog";
 
 const roleColors = {
   admin: "bg-primary/20 text-primary border-primary/30",
@@ -60,6 +61,7 @@ function UserRowSkeleton() {
 
 export default function UserList() {
   const [search, setSearch] = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
   const { toast } = useToast();
   
   const { data: users = [], isLoading, isError, error } = useUsers();
@@ -104,7 +106,7 @@ export default function UserList() {
               Manage team members and their permissions
             </p>
           </div>
-          <Button className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
+          <Button className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2" onClick={() => setCreateOpen(true)}>
             <Plus className="w-4 h-4" />
             Invite User
           </Button>
@@ -270,6 +272,8 @@ export default function UserList() {
           </div>
         )}
       </div>
+
+      <CreateUserDialog open={createOpen} onOpenChange={setCreateOpen} />
     </AdminLayout>
   );
 }

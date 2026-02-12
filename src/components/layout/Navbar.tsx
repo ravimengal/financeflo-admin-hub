@@ -1,76 +1,120 @@
- import { NavLink, useLocation } from "react-router-dom";
- import { LayoutGrid, Users, Building2, CreditCard, ChevronDown, User } from "lucide-react";
- import { cn } from "@/lib/utils";
- import {
-   DropdownMenu,
-   DropdownMenuContent,
-   DropdownMenuItem,
-   DropdownMenuTrigger,
- } from "@/components/ui/dropdown-menu";
- 
- const menuItems = [
-   { title: "App List", url: "/", icon: LayoutGrid },
-   { title: "User List", url: "/users", icon: Users },
-   { title: "Organization", url: "/organization", icon: Building2 },
-   { title: "Subscription", url: "/subscription", icon: CreditCard },
- ];
- 
- export function Navbar() {
-   const location = useLocation();
- 
-   return (
-     <header className="bg-[hsl(var(--navbar-background))] border-b border-[hsl(var(--navbar-background))]">
-       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-         <div className="flex items-center justify-between h-14">
-           {/* Logo */}
-           <div className="flex items-center gap-2">
-             <div className="flex items-center gap-1">
-               <div className="w-2 h-2 rounded-full bg-primary" />
-               <div className="w-2 h-2 rounded-full bg-primary" />
-               <div className="w-2 h-2 rounded-full bg-primary" />
-             </div>
-             <span className="text-primary font-bold text-xl">AdminHub</span>
-           </div>
- 
-           {/* Navigation */}
-           <nav className="hidden md:flex items-center gap-1">
-             {menuItems.map((item) => {
-               const isActive = location.pathname === item.url;
-               return (
-                 <NavLink
-                   key={item.title}
-                   to={item.url}
-                   className={cn(
-                     "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors",
-                     isActive
-                       ? "text-[hsl(var(--navbar-foreground))]"
-                       : "text-[hsl(var(--navbar-muted))] hover:text-[hsl(var(--navbar-foreground))]"
-                   )}
-                 >
-                   <item.icon className="w-4 h-4" />
-                   {item.title}
-                 </NavLink>
-               );
-             })}
-           </nav>
- 
-           {/* User Menu */}
-           <DropdownMenu>
-             <DropdownMenuTrigger asChild>
-               <button className="flex items-center gap-2 text-[hsl(var(--navbar-foreground))] hover:text-primary transition-colors">
-                 <User className="w-4 h-4" />
-                 <span className="text-sm font-medium">Admin</span>
-                 <ChevronDown className="w-4 h-4" />
-               </button>
-             </DropdownMenuTrigger>
-             <DropdownMenuContent align="end" className="w-48">
-               <DropdownMenuItem className="cursor-pointer">Profile</DropdownMenuItem>
-               <DropdownMenuItem className="cursor-pointer">Settings</DropdownMenuItem>
-               <DropdownMenuItem className="cursor-pointer text-destructive">Logout</DropdownMenuItem>
-             </DropdownMenuContent>
-           </DropdownMenu>
-         </div>
-       </div>
-     </header>
-   );
- }
+import { NavLink, useLocation } from "react-router-dom";
+import { LayoutGrid, Users, Building2, CreditCard, Search, Bell, ChevronDown, User, Settings, LogOut } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+
+const menuItems = [
+  { title: "Dashboard", url: "/", icon: LayoutGrid },
+  { title: "Users", url: "/users", icon: Users },
+  { title: "Organization", url: "/organization", icon: Building2 },
+  { title: "Subscription", url: "/subscription", icon: CreditCard },
+];
+
+export function Navbar() {
+  const location = useLocation();
+
+  return (
+    <header className="border-b border-border/50">
+      {/* Top bar - Brand + Search + User */}
+      <div className="bg-[hsl(var(--navbar-background))]">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14">
+            {/* Logo */}
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+                <span className="text-primary-foreground font-bold text-sm">A</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[hsl(var(--navbar-foreground))] font-bold text-base leading-tight">Admin-Hub</span>
+                <span className="text-[hsl(var(--navbar-muted))] text-[10px] leading-tight">by FinanceFlo</span>
+              </div>
+            </div>
+
+            {/* Search */}
+            <div className="hidden md:flex items-center">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[hsl(var(--navbar-muted))]" />
+                <Input
+                  placeholder="Search..."
+                  className="pl-9 w-64 h-9 bg-[hsl(222,47%,15%)] border-[hsl(222,47%,20%)] text-[hsl(var(--navbar-foreground))] placeholder:text-[hsl(var(--navbar-muted))] focus-visible:ring-primary/50 text-sm"
+                />
+                <kbd className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-[hsl(var(--navbar-muted))] bg-[hsl(222,47%,20%)] px-1.5 py-0.5 rounded">⌘K</kbd>
+              </div>
+            </div>
+
+            {/* Right side */}
+            <div className="flex items-center gap-3">
+              {/* Notifications */}
+              <button className="relative p-2 rounded-lg text-[hsl(var(--navbar-muted))] hover:text-[hsl(var(--navbar-foreground))] transition-colors">
+                <Bell className="w-5 h-5" />
+                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary" />
+              </button>
+
+              {/* User menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 hover:opacity-90 transition-opacity">
+                    <Avatar className="h-8 w-8 border border-[hsl(222,47%,20%)]">
+                      <AvatarFallback className="bg-primary/20 text-primary text-xs font-semibold">FA</AvatarFallback>
+                    </Avatar>
+                    <div className="hidden lg:flex flex-col items-start">
+                      <span className="text-[hsl(var(--navbar-foreground))] text-sm font-medium leading-tight">Finance Admin</span>
+                      <span className="text-[hsl(var(--navbar-muted))] text-[10px] leading-tight">admin@company.com</span>
+                    </div>
+                    <ChevronDown className="w-3 h-3 text-[hsl(var(--navbar-muted))] hidden lg:block" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52 bg-popover border-border">
+                  <DropdownMenuItem className="cursor-pointer gap-2">
+                    <User className="w-4 h-4" /> Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer gap-2">
+                    <Settings className="w-4 h-4" /> Settings
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="cursor-pointer gap-2 text-destructive">
+                    <LogOut className="w-4 h-4" /> Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom bar - Navigation */}
+      <div className="bg-[hsl(222,47%,14%)]">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+          <nav className="flex items-center gap-1 h-10 overflow-x-auto">
+            {menuItems.map((item) => {
+              const isActive = location.pathname === item.url;
+              return (
+                <NavLink
+                  key={item.title}
+                  to={item.url}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-1.5 text-sm font-medium rounded-md transition-all whitespace-nowrap",
+                    isActive
+                      ? "bg-[hsl(222,47%,20%)] text-[hsl(var(--navbar-foreground))]"
+                      : "text-[hsl(var(--navbar-muted))] hover:text-[hsl(var(--navbar-foreground))] hover:bg-[hsl(222,47%,18%)]"
+                  )}
+                >
+                  <item.icon className="w-4 h-4" />
+                  {item.title}
+                </NavLink>
+              );
+            })}
+          </nav>
+        </div>
+      </div>
+    </header>
+  );
+}
