@@ -10,4 +10,4 @@
  export type { Organization } from './organization.service';
  export type { User } from './user.service';
  export type { App } from './app.service';
- export type { Plan, Subscription } from './subscription.service';
+ export type { Subscription, MarketplaceApp, SubscribedApp, AppCredit } from './subscription.service';
