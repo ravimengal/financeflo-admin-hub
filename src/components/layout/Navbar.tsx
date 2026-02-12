@@ -23,7 +23,7 @@ export function Navbar() {
 
   return (
     <header className="bg-[hsl(var(--navbar-background))] border-b border-[hsl(222,47%,15%)]">
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1500px] mx-auto px-4 lg:px-2">
         <div className="flex items-center h-14 gap-6">
           {/* Logo */}
           <div className="flex items-center gap-2.5 shrink-0">
