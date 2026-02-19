@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import { SubscribedApp } from "@/services/subscription.service";
+import type { SubscribedApp } from "@/services";
 
 const statusStyles = {
   active: "bg-success/20 text-success border-success/30",

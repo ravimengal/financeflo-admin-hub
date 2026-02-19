@@ -2,7 +2,7 @@ import { Check, Plus, Star, Loader2, FileText, ArrowRightLeft, Send, Users } fro
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { MarketplaceApp } from "@/services/subscription.service";
+import type { MarketplaceApp } from "@/services";
 
 interface MarketplaceAppCardProps {
   app: MarketplaceApp;
