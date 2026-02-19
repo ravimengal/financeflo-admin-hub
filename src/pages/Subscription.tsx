@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { InstalledAppCard } from "@/components/subscription/InstalledAppCard";
 import { MarketplaceAppCard } from "@/components/subscription/MarketplaceAppCard";
 import { ConfirmDialog } from "@/components/dialogs/ConfirmDialog";
-import type { SubscribedApp, MarketplaceApp } from "@/services/subscription.service";
+import type { SubscribedApp, MarketplaceApp } from "@/services";
 
 const initialInstalled: SubscribedApp[] = [
   {
