@@ -9,6 +9,7 @@ import AppList from "./pages/AppList";
 import UserList from "./pages/UserList";
 import Organization from "./pages/Organization";
 import Subscription from "./pages/Subscription";
+import ServiceRequests from "./pages/ServiceRequests";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ function AppContent() {
         <Route path="/users" element={<UserList />} />
         <Route path="/organization" element={<Organization />} />
         <Route path="/subscription" element={<Subscription />} />
+        <Route path="/requests" element={<ServiceRequests />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <SessionExpiredDialog open={isExpired} onRefresh={handleRefresh} onLogout={handleLogout} />

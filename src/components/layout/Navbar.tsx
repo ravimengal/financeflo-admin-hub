@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutGrid, Users, Building2, CreditCard, Search, Bell, ChevronDown, User, Settings, LogOut } from "lucide-react";
+import { LayoutGrid, Users, Building2, CreditCard, LifeBuoy, Search, Bell, ChevronDown, User, Settings, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import {
@@ -16,6 +16,7 @@ const menuItems = [
   { title: "Users", url: "/users", icon: Users },
   { title: "Organization", url: "/organization", icon: Building2 },
   { title: "Subscription", url: "/subscription", icon: CreditCard },
+  { title: "Requests", url: "/requests", icon: LifeBuoy },
 ];
 
 export function Navbar() {
