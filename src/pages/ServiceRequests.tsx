@@ -5,6 +5,7 @@ import { StatCard } from "@/components/ui/stat-card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CreateRequestDialog } from "@/components/dialogs/CreateRequestDialog";
 import { RequestDetailDialog, ServiceRequest } from "@/components/dialogs/RequestDetailDialog";
 import { cn } from "@/lib/utils";
@@ -156,39 +157,46 @@ export default function ServiceRequests() {
             <p className="text-muted-foreground">Create a new request to get started.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-3">
-            {filtered.map((r, i) => (
-              <div
-                key={r.id}
-                className="content-card p-5 hover-lift flex flex-col md:flex-row md:items-center gap-4"
-                style={{ animationDelay: `${i * 30}ms` }}
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                    <span className="text-xs font-mono text-muted-foreground">{r.id}</span>
-                    <Badge variant="outline" className={cn("capitalize text-xs", statusColors[r.status])}>
-                      {r.status.replace("_", " ")}
-                    </Badge>
-                    <Badge variant="outline" className={cn("capitalize text-xs", priorityColors[r.priority])}>
-                      {r.priority}
-                    </Badge>
-                    <Badge variant="outline" className="text-xs">{r.category}</Badge>
-                  </div>
-                  <h3 className="font-semibold text-foreground truncate">{r.title}</h3>
-                  <p className="text-sm text-muted-foreground line-clamp-1 mt-0.5">{r.description}</p>
-                  <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                    <span>By {r.createdBy}</span>
-                    <span>{new Date(r.createdAt).toLocaleDateString()}</span>
-                    <span>{r.documents.length} docs</span>
-                    <span>{r.comments.length} comments</span>
-                  </div>
-                </div>
-                <Button variant="outline" size="sm" className="gap-2 shrink-0" onClick={() => setSelectedId(r.id)}>
-                  <Eye className="w-4 h-4" />
-                  View Details
-                </Button>
-              </div>
-            ))}
+          <div className="content-card overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-border hover:bg-transparent">
+                  <TableHead className="text-muted-foreground">ID</TableHead>
+                  <TableHead className="text-muted-foreground">Title</TableHead>
+                  <TableHead className="text-muted-foreground">Category</TableHead>
+                  <TableHead className="text-muted-foreground">Priority</TableHead>
+                  <TableHead className="text-muted-foreground">Status</TableHead>
+                  <TableHead className="text-muted-foreground">Created By</TableHead>
+                  <TableHead className="text-muted-foreground">Created</TableHead>
+                  <TableHead className="text-muted-foreground text-center">Docs</TableHead>
+                  <TableHead className="text-muted-foreground text-center">Comments</TableHead>
+                  <TableHead className="text-muted-foreground w-12"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((r) => (
+                  <TableRow key={r.id} className="border-border hover:bg-accent/50">
+                    <TableCell className="font-mono text-xs text-muted-foreground">{r.id}</TableCell>
+                    <TableCell>
+                      <p className="font-medium text-foreground truncate max-w-[280px]">{r.title}</p>
+                      <p className="text-xs text-muted-foreground truncate max-w-[280px]">{r.description}</p>
+                    </TableCell>
+                    <TableCell><Badge variant="outline" className="text-xs">{r.category}</Badge></TableCell>
+                    <TableCell><Badge variant="outline" className={cn("capitalize text-xs", priorityColors[r.priority])}>{r.priority}</Badge></TableCell>
+                    <TableCell><Badge variant="outline" className={cn("capitalize text-xs", statusColors[r.status])}>{r.status.replace("_", " ")}</Badge></TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{r.createdBy}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{new Date(r.createdAt).toLocaleDateString()}</TableCell>
+                    <TableCell className="text-center text-sm text-muted-foreground">{r.documents.length}</TableCell>
+                    <TableCell className="text-center text-sm text-muted-foreground">{r.comments.length}</TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedId(r.id)}>
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         )}
       </div>
